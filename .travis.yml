@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t fakharu/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run fakharu/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t fakharu/multi-client ./client
+    - docker build -t fakharu/multi-nginx ./nginx
+    - docker build -t fakharu/multi-server ./server
+    - docker build -t fakharu/multi-worker ./worker
+    # log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # push images to docker hub
+    - docker push fakharu/multi-client
+    - docker push fakharu/multi-nginx
+    - docker push fakharu/multi-server
+    - docker push fakharu/multi-worker
